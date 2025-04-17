@@ -13,8 +13,8 @@ from convert.summarize import summarize_transcript
 app = Flask(__name__)
 
 # Backend endpoint configuration
-BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:8000')  # Default backend URL
-TRANSCRIPT_ENDPOINT = f"{BACKEND_URL}/api/transcripts"  # Endpoint for sending transcripts
+BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:3000')  # Default backend URL
+TRANSCRIPT_ENDPOINT = f"{BACKEND_URL}/profile/uploadtranscript"  # Endpoint for sending transcripts
 
 # Initialize database on startup
 # init_db()

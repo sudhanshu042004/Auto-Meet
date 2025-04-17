@@ -1,0 +1,1 @@
+ALTER TABLE "summaries" ALTER COLUMN "transcriptId" SET DATA TYPE uuid;
