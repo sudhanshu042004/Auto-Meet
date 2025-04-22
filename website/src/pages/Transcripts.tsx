@@ -12,15 +12,15 @@ const Transcripts = () => {
 
   // Mock data for transcripts
   const transcripts = [
-    // { 
-    //   id: "1", 
-    //   meetingId: "1",
-    //   meetingTitle: "Weekly Team Standup", 
-    //   date: "Apr 17, 2025", 
-    //   duration: "30 mins",
-    //   speakerCount: 4,
-    //   wordCount: 1250,
-    // },
+    { 
+      id: "1", 
+      meetingId: "1",
+      meetingTitle: "Weekly Team Standup", 
+      date: "Apr 17, 2025", 
+      duration: "30 mins",
+      speakerCount: 4,
+      wordCount: 1250,
+    },
     // { 
     //   id: "2", 
     //   meetingId: "2",

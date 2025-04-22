@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +16,8 @@ import DashboardLayout from "./components/layout/DashboardLayout";
 import NotFound from "./pages/NotFound";
 import { useState, useEffect } from "react";
 import Cookies from "js-cookie"
+import { MeetingProvider } from "./context/MeetingContext";
+import ChatWithAI from "./pages/ChatWithAI";
 
 // Protected Route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -69,14 +70,16 @@ const App = () => {
             {/* Dashboard routes - protected */}
             <Route path="/dashboard" element={
               <ProtectedRoute>
-                <DashboardLayout />
+                <MeetingProvider>
+                  <DashboardLayout />
+                </MeetingProvider>
               </ProtectedRoute>
             }>
               <Route index element={<Dashboard />} />
               <Route path="meetings" element={<Meetings />} />
               <Route path="meetings/:id" element={<MeetingDetails />} />
               <Route path="transcripts" element={<Transcripts />} />
-              {/* <Route path="chat" element={<ChatWithAI />} /> */}
+              <Route path="chat" element={<ChatWithAI />} />
               <Route path="settings" element={<Settings />} />
             </Route>
             

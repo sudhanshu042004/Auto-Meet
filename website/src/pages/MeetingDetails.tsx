@@ -1,54 +1,137 @@
-
 import { useParams, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Calendar, Clock, Download, MessageSquare, Users, Video } from "lucide-react";
+import ReactMarkdown from 'react-markdown';
 
 const MeetingDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("summary");
-  
+  const [activeTab, setActiveTab] = useState("transcript");
+  const [transcript, setTranscript] = useState<any>();
+  const [isLoading, setIsLoading] = useState(false);
+  const [summary, setSummary] = useState<any>();
+  const [date, setDate] = useState<any>();
+  const [time, setTime] = useState<any>();
+
+
+  useEffect(()=>{
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch transcript and summary in parallel
+        const [transcriptResponse, summaryResponse] = await Promise.all([
+          fetch(`http://localhost:3000/meeting/getTranscript`,{
+            method : "POST",
+            headers : {
+              "Content-Type": "application/json",
+              "Authorization" : `Bearer ${localStorage.getItem("token")}`
+            },
+            body : JSON.stringify({meetingId : id})
+          }),
+          fetch(`http://localhost:3000/meeting/getSummary`,{
+            method : "POST",
+            headers : {
+              "Content-Type": "application/json",
+              "Authorization" : `Bearer ${localStorage.getItem("token")}`
+            },
+            body : JSON.stringify({meetingId : id})
+          })
+        ]);
+
+        if (!transcriptResponse.ok || !summaryResponse.ok) {
+          throw new Error('Failed to fetch meeting data');
+        }
+
+        const [transcriptData, summaryData] = await Promise.all([
+          transcriptResponse.json(),
+          summaryResponse.json()
+        ]);
+        console.log(transcriptData);
+        setTranscript(transcriptData);
+        setSummary(summaryData);
+        
+        if (transcriptData.createdAt) {
+          const createDate = new Date(transcriptData.createdAt);
+          setDate(createDate.toDateString());
+          setTime(createDate.toLocaleTimeString());
+        }
+      } catch (error) {
+        console.error('Error fetching meeting data:', error);
+        // You might want to show an error toast here
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    if (id) {
+      fetchData();
+    }
+  },[id])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 rounded-full bg-primary animate-bounce" />
+          <div className="w-4 h-4 rounded-full bg-primary animate-bounce delay-75" />
+          <div className="w-4 h-4 rounded-full bg-primary animate-bounce delay-150" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!transcript || !summary) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold">No meeting data found</h2>
+          <p className="text-muted-foreground">The meeting you're looking for doesn't exist or you don't have access to it.</p>
+        </div>
+      </div>
+    );
+  }
+  // const createDate = new Date(transcript.createdAt);
   // Mock meeting data - in a real app, you'd fetch this based on the ID
   const meeting = {
     id,
-    title: "Weekly Team Standup",
-    date: "April 17, 2025",
-    time: "9:30 AM",
-    duration: "30 minutes",
+    title: "Meeting transcript and summary",
+    date: date,
+    time: time,
+    // duration: "30 minutes",
     status: "completed",
-    participants: [
-      { id: "1", name: "John Doe", role: "Product Manager" },
-      { id: "2", name: "Sarah Johnson", role: "Designer" },
-      { id: "3", name: "Mike Wilson", role: "Developer" },
-      { id: "4", name: "Emily Brown", role: "Marketing" },
-    ],
-    summary: "The team discussed progress on the new dashboard feature. Development is on track for the end of the month. Design team will deliver final mockups by Friday. Marketing is preparing the launch materials.",
-    keyPoints: [
-      "Dashboard feature on track for month-end delivery",
-      "Design mockups to be completed by Friday",
-      "Marketing team to prepare launch materials",
-      "Next sprint planning scheduled for Monday"
-    ],
-    actionItems: [
-      { item: "Review design mockups", assignee: "John Doe", dueDate: "Apr 19" },
-      { item: "Complete API integration", assignee: "Mike Wilson", dueDate: "Apr 22" },
-      { item: "Prepare launch blog post", assignee: "Emily Brown", dueDate: "Apr 25" }
-    ],
-    transcript: [
-      { time: "00:00", speaker: "John Doe", text: "Good morning everyone, let's get started with our weekly standup." },
-      { time: "00:10", speaker: "Sarah Johnson", text: "I've been working on the dashboard mockups and should have them ready by Friday." },
-      { time: "00:25", speaker: "Mike Wilson", text: "I'm making good progress on the backend API for the dashboard. Should be ready for integration testing by Wednesday." },
-      { time: "00:42", speaker: "Emily Brown", text: "I've started drafting the launch materials for the marketing campaign." },
-      { time: "01:03", speaker: "John Doe", text: "Sounds good. Any blockers anyone wants to discuss?" },
-      { time: "01:12", speaker: "Mike Wilson", text: "I might need some clarification on a few design specifications. Sarah, can we meet later today?" },
-      { time: "01:22", speaker: "Sarah Johnson", text: "Sure, I'm free after lunch." },
-      { time: "01:28", speaker: "John Doe", text: "Great! Let's wrap up then. Thanks everyone." },
+    // participants: [
+    //   { id: "1", name: "John Doe", role: "Product Manager" },
+    //   { id: "2", name: "Sarah Johnson", role: "Designer" },
+    //   { id: "3", name: "Mike Wilson", role: "Developer" },
+    //   { id: "4", name: "Emily Brown", role: "Marketing" },
+    // ],
+    // summary: "The team discussed progress on the new dashboard feature. Development is on track for the end of the month. Design team will deliver final mockups by Friday. Marketing is preparing the launch materials.",
+    // keyPoints: [
+    //   "Dashboard feature on track for month-end delivery",
+    //   "Design mockups to be completed by Friday",
+    //   "Marketing team to prepare launch materials",
+    //   "Next sprint planning scheduled for Monday"
+    // ],
+    // actionItems: [
+    //   { item: "Review design mockups", assignee: "John Doe", dueDate: "Apr 19" },
+    //   { item: "Complete API integration", assignee: "Mike Wilson", dueDate: "Apr 22" },
+    //   { item: "Prepare launch blog post", assignee: "Emily Brown", dueDate: "Apr 25" }
+    // ],
+    // transcript: [
+    //   { time: "00:00", speaker: "John Doe", text: "Good morning everyone, let's get started with our weekly standup." },
+    //   { time: "00:10", speaker: "Sarah Johnson", text: "I've been working on the dashboard mockups and should have them ready by Friday." },
+    //   { time: "00:25", speaker: "Mike Wilson", text: "I'm making good progress on the backend API for the dashboard. Should be ready for integration testing by Wednesday." },
+    //   { time: "00:42", speaker: "Emily Brown", text: "I've started drafting the launch materials for the marketing campaign." },
+    //   { time: "01:03", speaker: "John Doe", text: "Sounds good. Any blockers anyone wants to discuss?" },
+    //   { time: "01:12", speaker: "Mike Wilson", text: "I might need some clarification on a few design specifications. Sarah, can we meet later today?" },
+    //   { time: "01:22", speaker: "Sarah Johnson", text: "Sure, I'm free after lunch." },
+    //   { time: "01:28", speaker: "John Doe", text: "Great! Let's wrap up then. Thanks everyone." },
       // Additional transcript lines would go here
-    ]
+    //]
   };
 
   return (
@@ -76,26 +159,26 @@ const MeetingDetails = () => {
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
-              <span>{meeting.time} • {meeting.duration}</span>
+              <span>{meeting.time}</span>
             </div>
             <div className="flex items-center gap-2">
               <Video className="h-4 w-4 text-muted-foreground" />
               <span>Google Meet</span>
             </div>
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-muted-foreground" />
               <span>{meeting.participants.length} Participants</span>
-            </div>
+            </div> */}
             <div className="pt-4">
-              <h3 className="text-sm font-medium mb-2">Participants</h3>
-              <div className="space-y-2">
+              {/* <h3 className="text-sm font-medium mb-2">Participants</h3> */}
+              {/* <div className="space-y-2">
                 {meeting.participants.map((participant) => (
                   <div key={participant.id} className="text-sm">
                     <div className="font-medium">{participant.name}</div>
                     <div className="text-muted-foreground">{participant.role}</div>
                   </div>
                 ))}
-              </div>
+              </div> */}
             </div>
           </CardContent>
         </Card>
@@ -114,7 +197,7 @@ const MeetingDetails = () => {
                   <CardTitle>Meeting Summary</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p>{meeting.summary}</p>
+                  <p>{summary.summary}</p>
                 </CardContent>
               </Card>
               
@@ -123,15 +206,13 @@ const MeetingDetails = () => {
                   <CardTitle>Key Points</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ul className="list-disc pl-5 space-y-2">
-                    {meeting.keyPoints.map((point, index) => (
-                      <li key={index}>{point}</li>
-                    ))}
-                  </ul>
+                  <div className="prose prose-sm max-w-none">
+                    <ReactMarkdown>{summary.highlights}</ReactMarkdown>
+                  </div>
                 </CardContent>
               </Card>
               
-              <Card>
+              {/* <Card>
                 <CardHeader>
                   <CardTitle>Action Items</CardTitle>
                 </CardHeader>
@@ -152,7 +233,7 @@ const MeetingDetails = () => {
                     ))}
                   </div>
                 </CardContent>
-              </Card>
+              </Card> */}
               
               <Card>
                 <CardHeader>
@@ -188,7 +269,7 @@ const MeetingDetails = () => {
               <Card>
                 <CardContent className="p-6">
                   <div className="space-y-4">
-                    {meeting.transcript.map((entry, index) => (
+                    {/* {meeting.transcript.map((entry, index) => (
                       <div key={index} className="pb-4 last:pb-0 border-b last:border-0">
                         <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3 mb-1">
                           <span className="text-xs font-mono text-muted-foreground">{entry.time}</span>
@@ -196,7 +277,10 @@ const MeetingDetails = () => {
                         </div>
                         <p>{entry.text}</p>
                       </div>
-                    ))}
+                    ))} */}
+                    <div>
+                      {transcript.transcriptText}
+                    </div>
                   </div>
                 </CardContent>
               </Card>

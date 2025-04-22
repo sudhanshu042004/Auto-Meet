@@ -67,11 +67,11 @@ export const DashboardLayout = () => {
       label: "Meetings",
       href: "/dashboard/meetings",
     },
-    {
-      icon: <FileText size={20} className="text-blue-600" />,
-      label: "Transcripts",
-      href: "/dashboard/transcripts",
-    },
+    // {
+    //   icon: <FileText size={20} className="text-blue-600" />,
+    //   label: "Transcripts",
+    //   href: "/dashboard/transcripts",
+    // },
     {
       icon: <Settings size={20} className="text-blue-600" />,
       label: "Settings",

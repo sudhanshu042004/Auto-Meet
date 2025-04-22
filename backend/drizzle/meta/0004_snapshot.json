@@ -1,9 +1,70 @@
 {
-  "id": "9d1d0572-0ec0-4ab3-a229-4bd2ee1152b2",
-  "prevId": "fd1378f3-4bf0-40a9-826f-c1bf3b31f8eb",
+  "id": "6e3efd1b-ab8c-41dd-b7e4-735bf44a9b56",
+  "prevId": "58b29b29-a134-4837-a9f4-2d71d70d94cd",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.meeting": {
+      "name": "meeting",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "meeting_id": {
+          "name": "meeting_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "createdBy": {
+          "name": "createdBy",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "meeting_createdBy_users_id_fk": {
+          "name": "meeting_createdBy_users_id_fk",
+          "tableFrom": "meeting",
+          "tableTo": "users",
+          "columnsFrom": [
+            "createdBy"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.summaries": {
       "name": "summaries",
       "schema": "",
@@ -19,7 +80,7 @@
           "name": "transcript_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "meeting_link": {
           "name": "meeting_link",
@@ -45,16 +106,35 @@
           "primaryKey": false,
           "notNull": false,
           "default": "now()"
+        },
+        "createdBy": {
+          "name": "createdBy",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "summaries_transcript_id_transcripts_id_fk": {
-          "name": "summaries_transcript_id_transcripts_id_fk",
+        "summaries_transcript_id_transcripts_transcript_id_fk": {
+          "name": "summaries_transcript_id_transcripts_transcript_id_fk",
           "tableFrom": "summaries",
           "tableTo": "transcripts",
           "columnsFrom": [
             "transcript_id"
+          ],
+          "columnsTo": [
+            "transcript_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "summaries_createdBy_users_id_fk": {
+          "name": "summaries_createdBy_users_id_fk",
+          "tableFrom": "summaries",
+          "tableTo": "users",
+          "columnsFrom": [
+            "createdBy"
           ],
           "columnsTo": [
             "id"
@@ -73,8 +153,8 @@
       "name": "transcripts",
       "schema": "",
       "columns": {
-        "id": {
-          "name": "id",
+        "transcript_id": {
+          "name": "transcript_id",
           "type": "uuid",
           "primaryKey": true,
           "notNull": true,
@@ -98,10 +178,30 @@
           "primaryKey": false,
           "notNull": false,
           "default": "now()"
+        },
+        "createdBy": {
+          "name": "createdBy",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "transcripts_createdBy_users_id_fk": {
+          "name": "transcripts_createdBy_users_id_fk",
+          "tableFrom": "transcripts",
+          "tableTo": "users",
+          "columnsFrom": [
+            "createdBy"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -172,7 +272,16 @@
       "isRLSEnabled": false
     }
   },
-  "enums": {},
+  "enums": {
+    "public.status": {
+      "name": "status",
+      "schema": "public",
+      "values": [
+        "pending",
+        "completed"
+      ]
+    }
+  },
   "schemas": {},
   "sequences": {},
   "roles": {},

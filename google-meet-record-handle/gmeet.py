@@ -157,6 +157,39 @@ async def join_meet():
         shell=True,
     )
 
+    # subprocess.run("pactl info", shell=True, check=True)
+    # print("✅ Audio system active")
+
+    #     # Create virtual sink for meeting output
+    # subprocess.run(
+    #     'pactl load-module module-null-sink sink_name=MeetingOutput sink_properties=device.description="Virtual_Meeting_Output"',
+    #     shell=True, check=True
+    # )
+    # print("✅ Virtual sink 'MeetingOutput' created")
+
+    # # Create virtual sink for microphone output
+    # subprocess.run(
+    #     'pactl load-module module-null-sink sink_name=MicOutput sink_properties=device.description="Virtual_Microphone_Output"',
+    #     shell=True, check=True
+    # )
+    # print("✅ Virtual sink 'MicOutput' created")
+
+    #     # Create loopback to route audio from MeetingOutput to MicOutput
+    # subprocess.run(
+    #     'pactl load-module module-loopback latency_msec=1 source=MeetingOutput.monitor sink=MicOutput',
+    #     shell=True, check=True
+    # )
+    # print("✅ Loopback from 'MeetingOutput' to 'MicOutput' created")
+
+    #     # Set default sink and source for the current session
+    # subprocess.run('pactl set-default-sink MeetingOutput', shell=True, check=True)
+    # subprocess.run('pactl set-default-source MicOutput.monitor', shell=True, check=True)
+    # print("✅ Default sink and source set")
+
+    # except subprocess.CalledProcessError as e:
+    #     print(f"❌ Audio setup failed: {e}")
+
+
     options = uc.ChromeOptions()
 
     options.add_argument("--use-fake-ui-for-media-stream")

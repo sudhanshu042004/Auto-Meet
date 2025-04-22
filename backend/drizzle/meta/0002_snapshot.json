@@ -1,9 +1,62 @@
 {
-  "id": "98ec2525-d284-46bb-99d2-8955ae57a1bf",
-  "prevId": "36a88d4e-de09-425c-80a1-e92c7aaafc7b",
+  "id": "2d73cf7e-06cf-499b-971b-a089af74f62f",
+  "prevId": "a9d2184f-cbbc-47bd-b34f-6803bf0755d2",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.pending_transcripts": {
+      "name": "pending_transcripts",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "meeting_id": {
+          "name": "meeting_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdBy": {
+          "name": "createdBy",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "pending_transcripts_createdBy_users_id_fk": {
+          "name": "pending_transcripts_createdBy_users_id_fk",
+          "tableFrom": "pending_transcripts",
+          "tableTo": "users",
+          "columnsFrom": [
+            "createdBy"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.summaries": {
       "name": "summaries",
       "schema": "",
@@ -19,7 +72,7 @@
           "name": "transcript_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "meeting_link": {
           "name": "meeting_link",
@@ -55,15 +108,15 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "summaries_transcript_id_transcripts_id_fk": {
-          "name": "summaries_transcript_id_transcripts_id_fk",
+        "summaries_transcript_id_transcripts_transcript_id_fk": {
+          "name": "summaries_transcript_id_transcripts_transcript_id_fk",
           "tableFrom": "summaries",
           "tableTo": "transcripts",
           "columnsFrom": [
             "transcript_id"
           ],
           "columnsTo": [
-            "id"
+            "transcript_id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -92,8 +145,8 @@
       "name": "transcripts",
       "schema": "",
       "columns": {
-        "id": {
-          "name": "id",
+        "transcript_id": {
+          "name": "transcript_id",
           "type": "uuid",
           "primaryKey": true,
           "notNull": true,

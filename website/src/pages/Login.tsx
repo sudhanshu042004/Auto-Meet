@@ -29,7 +29,7 @@ const Login = () => {
   
       const data = await response.json();
       // Save token in cookie
-Cookies.set("token", data.token, {
+Cookies.set("token", "bearer " + data.token, {
   expires: 7, // Expires in 7 days
   secure: true, // Only sent over HTTPS
   sameSite: "lax", // Prevent CSRF in some cases

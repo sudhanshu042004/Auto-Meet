@@ -1,9 +1,62 @@
 {
-  "id": "36a88d4e-de09-425c-80a1-e92c7aaafc7b",
-  "prevId": "22706e51-93c8-4d71-8c5a-50acfe0b53af",
+  "id": "a9d2184f-cbbc-47bd-b34f-6803bf0755d2",
+  "prevId": "ae0eae43-fe77-46ce-b391-c92a06f7c921",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.pending_transcripts": {
+      "name": "pending_transcripts",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "meeting_link": {
+          "name": "meeting_link",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdBy": {
+          "name": "createdBy",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "pending_transcripts_createdBy_users_id_fk": {
+          "name": "pending_transcripts_createdBy_users_id_fk",
+          "tableFrom": "pending_transcripts",
+          "tableTo": "users",
+          "columnsFrom": [
+            "createdBy"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.summaries": {
       "name": "summaries",
       "schema": "",
@@ -19,7 +72,7 @@
           "name": "transcript_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "meeting_link": {
           "name": "meeting_link",
@@ -46,21 +99,34 @@
           "notNull": false,
           "default": "now()"
         },
-        "created_by": {
-          "name": "created_by",
-          "type": "uuid",
+        "createdBy": {
+          "name": "createdBy",
+          "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "summaries_transcript_id_transcripts_id_fk": {
-          "name": "summaries_transcript_id_transcripts_id_fk",
+        "summaries_transcript_id_transcripts_transcript_id_fk": {
+          "name": "summaries_transcript_id_transcripts_transcript_id_fk",
           "tableFrom": "summaries",
           "tableTo": "transcripts",
           "columnsFrom": [
             "transcript_id"
+          ],
+          "columnsTo": [
+            "transcript_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "summaries_createdBy_users_id_fk": {
+          "name": "summaries_createdBy_users_id_fk",
+          "tableFrom": "summaries",
+          "tableTo": "users",
+          "columnsFrom": [
+            "createdBy"
           ],
           "columnsTo": [
             "id"
@@ -79,8 +145,8 @@
       "name": "transcripts",
       "schema": "",
       "columns": {
-        "id": {
-          "name": "id",
+        "transcript_id": {
+          "name": "transcript_id",
           "type": "uuid",
           "primaryKey": true,
           "notNull": true,
@@ -105,15 +171,29 @@
           "notNull": false,
           "default": "now()"
         },
-        "created_by": {
-          "name": "created_by",
-          "type": "uuid",
+        "createdBy": {
+          "name": "createdBy",
+          "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "transcripts_createdBy_users_id_fk": {
+          "name": "transcripts_createdBy_users_id_fk",
+          "tableFrom": "transcripts",
+          "tableTo": "users",
+          "columnsFrom": [
+            "createdBy"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},

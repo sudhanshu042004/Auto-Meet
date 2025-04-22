@@ -1,0 +1,1 @@
+ALTER TABLE "pending_transcripts" RENAME COLUMN "meeting_link" TO "meeting_id";

@@ -7,58 +7,97 @@ import requests
 from convert.audioConverter import convert_video_to_wav
 from convert.transcibe import transcribe_audio
 from convert.summarize import summarize_transcript
+from flask_cors import CORS
 # from db.database import init_db, save_transcript, get_transcript
 # from db.database import init_db, update_recording_status, get_recording_status
 
 app = Flask(__name__)
+CORS(app)
 
 # Backend endpoint configuration
-BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:3000')  # Default backend URL
-TRANSCRIPT_ENDPOINT = f"{BACKEND_URL}/profile/uploadtranscript"  # Endpoint for sending transcripts
+BACKEND_URL = os.getenv('BACKEND_URL', 'http://172.17.0.1:3000')  # Default backend URL
+TRANSCRIPT_ENDPOINT = f"{BACKEND_URL}/meeting/uploadTranscript"  # Endpoint for sending transcripts
 
 # Initialize database on startup
 # init_db()
 
-def send_transcript_to_backend(recording_id, transcript_text):
+from deepgram import (
+    DeepgramClient,
+    PrerecordedOptions,
+    FileSource,
+)
+
+def send_transcript_to_backend(recording_id, transcript_text, auth_token, meetingId):
     """
     Send transcript to another backend endpoint.
     
     Args:
         recording_id (str): ID of the recording
         transcript_text (str): The transcribed text
+        auth_token (str): Authorization token
+        meetingId (str): Meeting ID
     
     Returns:
         tuple: (success, response_data)
     """
     try:
+        # Ensure auth_token is properly formatted
+        if not auth_token.startswith('Bearer '):
+            auth_token = f'Bearer {auth_token}'
+            
         payload = {
             "recording_id": recording_id,
-            "transcript_text": transcript_text
+            "transcript_text": transcript_text,
+            "meetingId": meetingId
         }
+        
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': auth_token
+        }
+        
+        print(f"Sending transcript to backend with payload: {payload}")
+        print(f"Using headers: {headers}")
         
         response = requests.post(
             TRANSCRIPT_ENDPOINT,
             json=payload,
-            headers={'Content-Type': 'application/json'}
+            headers=headers,
+            timeout=30  # Add timeout to prevent hanging
         )
+        
+        print(f"Backend response status: {response.status_code}")
+        print(f"Backend response: {response.text}")
         
         if response.status_code == 200:
             return True, response.json()
         else:
-            print(f"Backend request failed with status {response.status_code}: {response.text}")
-            return False, response.text
+            error_msg = f"Backend request failed with status {response.status_code}: {response.text}"
+            print(error_msg)
+            return False, error_msg
             
+    except requests.exceptions.RequestException as e:
+        error_msg = f"Request error: {str(e)}"
+        print(error_msg)
+        print(f"Error details: {traceback.format_exc()}")
+        return False, error_msg
     except Exception as e:
-        print(f"Error sending transcript to backend: {str(e)}")
-        return False, str(e)
+        error_msg = f"Unexpected error: {str(e)}"
+        print(error_msg)
+        print(f"Error details: {traceback.format_exc()}")
+        return False, error_msg
 
 @app.route('/record_meeting', methods=['POST'])
 def record_meeting():
     # Get meeting details from request
     data = request.json
+    auth_token = request.headers.get('authorization')
 
     if not data or 'meeting_link' not in data:
         return jsonify({"error": "Meeting link is required"}), 400
+
+    if not auth_token:
+        return jsonify({"error": "Authorization token is required"}), 401
 
     # Generate a unique ID for this recording
     recording_id = data['meeting_link'].split('/')[-1]
@@ -160,6 +199,41 @@ def record_meeting():
             "details": ''.join(stderr_logs)
         }), 500
 
+    # After successful recording, create pending meeting iauthorizationn backend
+    try:
+        backend_url = "http://172.17.0.1:3000/meeting/create-pending"
+        headers = {
+            "Authorization": auth_token,
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "meetingId": recording_id
+        }
+        
+        response = requests.post(backend_url, json=payload, headers=headers)
+        
+        if response.status_code != 201:
+            print(f"Failed to create pending meeting in backend: {response.text}")
+            # Still return success for recording, but log the backend error
+            return jsonify({
+                "recording_id": recording_id,
+                "status": "started",
+                "message": "Meeting recording has been started",
+                "logs": ''.join(stdout_logs),
+                "warning": "Failed to create pending meeting in backend"
+            })
+            
+    except Exception as e:
+        print(f"Error creating pending meeting in backend: {str(e)}")
+        # Still return success for recording, but log the backend error
+        return jsonify({
+            "recording_id": recording_id,
+            "status": "started",
+            "message": "Meeting recording has been started",
+            "logs": ''.join(stdout_logs),
+            "warning": "Failed to create pending meeting in backend"
+        })
+
     return jsonify({
         "recording_id": recording_id,
         "status": "started",
@@ -202,6 +276,20 @@ def recording_status(recording_id):
 @app.route('/process_recording/<recording_id>', methods=['POST'])
 def process_recording(recording_id):
     try:
+        auth_token = request.headers.get('authorization')
+        data = request.json
+        
+        if not auth_token:
+            return jsonify({"error": "Authorization token is required"}), 401
+            
+        if not data or 'meetingId' not in data:
+            return jsonify({"error": "Meeting ID is required in request body"}), 400
+            
+        meetingId = data['meetingId']
+        
+        if not meetingId:
+            return jsonify({"error": "Meeting ID cannot be empty"}), 400
+
         # Get the current working directory
         current_dir = os.getcwd()
         print(f"Current working directory: {current_dir}")
@@ -210,7 +298,6 @@ def process_recording(recording_id):
         video_path = os.path.join(current_dir, "recordings", recording_id, "output.mp4")
         audio_path = os.path.join(current_dir, "audios", f"{recording_id}.wav")
         transcript_path = os.path.join(current_dir, "transcripts", f"{recording_id}.txt")
-        model_path = os.path.join(current_dir, "vosk-model-small-en-us-0.15")
 
         print(f"Video path: {video_path}")
         print(f"Audio path: {audio_path}")
@@ -235,35 +322,41 @@ def process_recording(recording_id):
                 "recording_id": recording_id
             }), 500
 
-        # Step 2: Transcribe audio
-        transcript_text = transcribe_audio(audio_path, model_path)
-        if transcript_text is None:
-            return jsonify({
-                "error": "Failed to transcribe audio",
-                "recording_id": recording_id
-            }), 500
+        # Step 2: Transcribe the audio
+        deepgram = DeepgramClient()
 
-        # Save transcript to file
-        try:
-            # Ensure transcripts directory exists
-            os.makedirs(os.path.dirname(transcript_path), exist_ok=True)
-            
-            # Write transcript to file
-            with open(transcript_path, 'w') as f:
-                f.write(transcript_text)
-            print(f"Transcript saved to {transcript_path}")
-        except Exception as e:
-            print(f"Error saving transcript to file: {str(e)}")
-            return jsonify({
-                "error": "Failed to save transcript to file",
-                "recording_id": recording_id,
-                "details": str(e)
-            }), 500
+        with open(audio_path, "rb") as file:
+            buffer_data = file.read()
+        
+        payload: FileSource = {
+            "buffer": buffer_data,
+        }
+
+        options = PrerecordedOptions(
+            model="nova-3",
+            smart_format=True,
+        )
+
+        response = deepgram.listen.rest.v("1").transcribe_file(payload, options)
+        transcript_text = response["results"]["channels"][0]["alternatives"][0]["transcript"]
+        print(transcript_text)
 
         # Step 3: Send transcript to backend
-        backend_success, backend_response = send_transcript_to_backend(recording_id, transcript_text)
+        backend_success, backend_response = send_transcript_to_backend(
+            recording_id, 
+            transcript_text,
+            auth_token,
+            meetingId
+        )
+        
         if not backend_success:
-            print(f"Warning: Failed to send transcript to backend: {backend_response}")
+            error_msg = f"Failed to send transcript to backend: {backend_response}"
+            print(error_msg)
+            return jsonify({
+                "error": "Failed to send transcript to backend",
+                "details": backend_response,
+                "recording_id": recording_id
+            }), 500
 
         return jsonify({
             "status": "success",
@@ -275,10 +368,11 @@ def process_recording(recording_id):
         })
 
     except Exception as e:
-        print(f"Error processing recording: {str(e)}")
+        error_msg = f"Error processing recording: {str(e)}"
+        print(error_msg)
         print(traceback.format_exc())
         return jsonify({
-            "error": f"Failed to process recording: {str(e)}",
+            "error": error_msg,
             "recording_id": recording_id
         }), 500
 

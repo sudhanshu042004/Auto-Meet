@@ -69,11 +69,13 @@ RUN pip3 install \
     opencv-python \
     Pillow \
     flask \
+    flask_cors \
     gunicorn \
     vosk \
     langchain \
     langchain-google-genai \
-    psycopg2-binary
+    psycopg2-binary \
+    deepgram-sdk
 
 RUN echo 'user ALL=(ALL:ALL) NOPASSWD:ALL' >> /etc/sudoers
 
