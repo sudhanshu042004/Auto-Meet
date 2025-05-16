@@ -2,7 +2,7 @@ import { BotIcon, Sparkles } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from './button'
-import logo from "../../../public/logo.svg"
+import logo from "/logo.svg"
 import { cn } from '@/lib/utils'
 
 interface navItems {
@@ -12,7 +12,7 @@ interface navItems {
 const navItems: navItems[] = [
     { href: "#features", label: "Features" },
     { href: "#how-it-works", label: "How it works" },
-    // {href : "#features",label : "Features"}
+    {href : "#about",label : "About"}
 ]
 
 const Header = () => {
@@ -36,7 +36,7 @@ const Header = () => {
         <header className={cn(
             "fixed z-50 transition-all duration-500",
             "left-0 right-0 backdrop-blur-xl",
-            "bg-[#0E103D]/80 rounded-xl border border-[#323232]/70",
+            "bg-[#0E103D]/70 rounded-xl border border-[#323232]/70",
             "shadow-[0_10px_30px_rgba(0,0,0,0.7)] hover:shadow-[0_15px_40px_rgba(0,0,0,0.5)]",
             "mx-4 mt-4",
             "sm:mx-6 sm:mt-6",
@@ -71,12 +71,12 @@ const Header = () => {
 
                 <div className='hidden md:flex space-x-3' >
                     <Link to="/login"
-                    className='flex justify-center items-center text-gray-300 font-medium text-sm px-4 lg:px-6 py-2 rounded-lg hover:border-[#0E103D] transition-colors border border-transparent'
+                    className='flex justify-center items-center text-gray-300 font-medium text-sm px-4 lg:px-6 py-2 rounded-lg hover:border-[#F2D7EE] transition-colors border border-transparent'
                     >
                         Log In
                     </Link>
                     <Link to='/signup'
-                    className='flex justify-center items-center px-4 lg:px-6 text-sm py-2 rounded-lg bg-[#F2D7EE] hover:bg-[#ffe6fb] h-11 min-w-[120px] lg:w-36
+                    className='flex justify-center items-center px-4 lg:px-6 text-sm py-2 rounded-lg bg-[#F2D7EE] hover:bg-white h-11 min-w-[120px] lg:w-36
                     transition-colors whitespace-nowrap
                     '
                     >
